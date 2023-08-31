@@ -25,6 +25,8 @@ import scipy.signal
 
 def readXsens(path2,xsens_file,cols=['Right Foot x', 'Right Foot y', 'Right Foot z'],sheet='Sensor Free Acceleration'):
 
+    if(not os.path.exists('./files_out')):
+        os.mkdir('./files_out')
     # assemble a "file+sheet.csv" str
     file_out = path2[:-6]+'files_out/'+xsens_file[0:-4] + '_' + sheet + '.csv'
 

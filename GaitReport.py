@@ -63,7 +63,7 @@ def findSteps(x, show=False,on_spot=True):
 def getReport(path,file):
 
     ## load data and create a csv file for "segment position" xsens calculations
-    df = mf.readXsens(path+'files/',file, cols=['Right Foot x', 'Right Foot y', 'Right Foot z',\
+     df = mf.readXsens(path+'files/',file, cols=['Right Foot x', 'Right Foot y', 'Right Foot z',\
                                   'Left Foot x', 'Left Foot y', 'Left Foot z'], sheet='Segment Position')
 
     ## load data and create a csv file for "segment orientation" xsens calculations
