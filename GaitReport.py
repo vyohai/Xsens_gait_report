@@ -63,14 +63,11 @@ def findSteps(x, show=False,on_spot=True):
 def getReport(path,file):
 
     ## load data and create a csv file for "segment position" xsens calculations
-     df = mf.readXsens(path+'files/',file, cols=['Right Foot x', 'Right Foot y', 'Right Foot z',\
+    df = mf.readXsens(path+'files/',file, cols=['Right Foot x', 'Right Foot y', 'Right Foot z',\
                                   'Left Foot x', 'Left Foot y', 'Left Foot z'], sheet='Segment Position')
 
     ## load data and create a csv file for "segment orientation" xsens calculations
-    df2 = mf.readXsens(path+'files/',file,
-                       cols=['Right Foot x', 'Right Foot y', 'Right Foot z', 'Right Upper Leg y', 'Right Lower Leg y',\
-                             'Left Foot x', 'Left Foot y', 'Left Foot z', 'Left Upper Leg y', 'Left Lower Leg y'],
-                       sheet='Segment Orientation - Euler')
+    df2 = mf.readXsens(path+'files/',file,cols=['Right Foot x', 'Right Foot y', 'Right Foot z', 'Right Upper Leg y', 'Right Lower Leg y','Left Foot x', 'Left Foot y', 'Left Foot z', 'Left Upper Leg y', 'Left Lower Leg y'],sheet='Segment Orientation - Euler')
 
     ## load data and create a csv file for "segment angular velocity" xsens calculations
     df3=mf.readXsens(path+'files/',file,cols=['Right Foot x', 'Right Foot y', 'Right Foot z',\
@@ -89,9 +86,9 @@ def getReport(path,file):
     gaitReport['left']['stepsArray'] = findSteps(df['Left Foot z'],show=False, on_spot=True)
 
     # calculate single and double support
-    single, double = [], []
+    single_l,single_r, double_l, double_r =[], [], [],[]
     stance_r,stance_l=[],[]
-    for i in range(min([len(gaitReport['left']['stepsArray']), len(gaitReport['left']['stepsArray'])])-1):
+    for i in range(min([len(gaitReport['left']['stepsArray']), len(gaitReport['right']['stepsArray'])])-1):
 
         # define the step window
         z_position_right=df['Right Foot z'][gaitReport['right']['stepsArray'][i][0]:gaitReport['right']['stepsArray'][i][1]]
@@ -114,11 +111,16 @@ def getReport(path,file):
         stance_l.append(100*len(ind_stance_left[0]) / len(z_position_left))
 
         # double support means both legs are in stance
-        double.append((min([ind_stance_right[0][-1], ind_stance_left[0][-1]]) -\
-                       max([ind_stance_right[0][0], ind_stance_left[0][0]]))\
-                      / (max(ind_stance_right[0][-1],ind_stance_left[0][-1])-\
-                         min(ind_stance_right[0][0],ind_stance_left[0][0])) * 100)
-        single.append(100 -double[-1])
+        ind_single_right =np.intersect1d(ind_stance_right,np.where(df['Left Foot z'][gaitReport['right']['stepsArray'][i][0]:gaitReport['right']['stepsArray'][i][1]] > stance_threshold_left)[0])
+        ind_single_left =np.intersect1d(ind_stance_left,np.where(df['Right Foot z'][gaitReport['left']['stepsArray'][i][0]:gaitReport['left']['stepsArray'][i][1]] > stance_threshold_right)[0])
+        single_r.append(100*len(ind_single_right)/len(z_position_right))
+        single_l.append(100*len(ind_single_left) / len(z_position_left))
+
+        ind_double_right =np.intersect1d(ind_stance_right,np.where(df['Left Foot z'][gaitReport['right']['stepsArray'][i][0]:gaitReport['right']['stepsArray'][i][1]] <= stance_threshold_left)[0])
+        ind_double_left =np.intersect1d(ind_stance_left,np.where(df['Right Foot z'][gaitReport['left']['stepsArray'][i][0]:gaitReport['left']['stepsArray'][i][1]] <= stance_threshold_right)[0])
+        double_r.append(100*len(ind_double_right)/len(z_position_right))
+        double_l.append(100*len(ind_double_left) / len(z_position_left))
+        
 
 
 
@@ -131,10 +133,10 @@ def getReport(path,file):
     dxx = []
     dyy = []
     ##############################right#########################################
-    gaitReport['right']['single support-mean'] = np.mean(single)
-    gaitReport['right']['single support-std'] = np.std(single)
-    gaitReport['right']['double support-mean'] = np.mean(double)
-    gaitReport['right']['double support-std'] = np.std(double)
+    gaitReport['right']['single support-mean'] = np.mean(single_r)
+    gaitReport['right']['single support-std'] = np.std(single_r)
+    gaitReport['right']['double support-mean'] = np.mean(double_r)
+    gaitReport['right']['double support-std'] = np.std(double_r)
     for i in range(len(gaitReport['right']['stepsArray'])):
         gate_times.append(ts[gaitReport['right']['stepsArray'][i][1]] - ts[gaitReport['right']['stepsArray'][i][0]])
         dx = df['Right Foot x'][gaitReport['right']['stepsArray'][i][1]] - df['Right Foot x'][gaitReport['right']['stepsArray'][i][0]]
@@ -191,10 +193,10 @@ def getReport(path,file):
 
 
     ############################left####################################
-    gaitReport['left']['single support-mean'] = np.mean(single)
-    gaitReport['left']['single support-std'] = np.std(single)
-    gaitReport['left']['double support-mean'] = np.mean(double)
-    gaitReport['left']['double support-std'] = np.std(double)
+    gaitReport['left']['single support-mean'] = np.mean(single_l)
+    gaitReport['left']['single support-std'] = np.std(single_l)
+    gaitReport['left']['double support-mean'] = np.mean(double_l)
+    gaitReport['left']['double support-std'] = np.std(double_l)
 
     for i in range(len(gaitReport['left']['stepsArray'])):
         gate_times.append(ts[gaitReport['left']['stepsArray'][i][1]] - ts[gaitReport['left']['stepsArray'][i][0]])

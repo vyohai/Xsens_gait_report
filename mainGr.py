@@ -42,6 +42,7 @@ class Switcher(object):
     def number_3(self):
         path=os.getcwd().replace('\\','/')+'/'
         files= os.listdir(path+'files/')
+        files=['check.xlsx']
 
         if True:
             for i in tqdm(range(len(files))):
